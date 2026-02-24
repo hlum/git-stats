@@ -1,6 +1,6 @@
 import { Rank } from "../types/stats";
 
-export function calculateRand(stats: { commits: number; prs: number; issues: number; stars: number; followers: number }): Rank {
+export function calculateRank(stats: { commits: number; prs: number; issues: number; stars: number; followers: number }): Rank {
 	const COMMITS_WEIGHT = 2;
 	const PRS_WEIGHT = 3;
 	const ISSUES_WEIGHT = 1;
