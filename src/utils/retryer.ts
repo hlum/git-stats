@@ -1,9 +1,9 @@
-export async function retryer<T>(fetcher: (...args: any[]) => Promise<T>, variables: any[], maxRetry: number = 3): Promise<T> {
+export async function retryer<T>(fetcher: (...args: any[]) => Promise<T>, variables: any, maxRetry: number = 3): Promise<T> {
 	let lastError: Error | undefined;
 
 	for (let i = 0; i < maxRetry; i++) {
 		try {
-			return await fetcher(...variables);
+			return await fetcher(variables);
 		} catch (error) {
 			lastError = error as Error;
 			if (i < maxRetry - 1) {
