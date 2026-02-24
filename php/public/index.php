@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use App\Api\LanguagesController;
 use App\Api\StatsController;
 use Dotenv\Dotenv;
 
@@ -23,9 +24,15 @@ $path = parse_url($requestUri, PHP_URL_PATH);
 if ($path === '/api/stats') {
     $controller = new StatsController();
     echo $controller->handle($_GET);
+} elseif ($path === '/api/top-langs') {
+    $controller = new LanguagesController();
+    echo $controller->handle($_GET);
 } else {
     // 404 for other routes
     http_response_code(404);
     header('Content-Type: text/plain');
-    echo "Not Found. Try /api/stats?username=YOUR_GITHUB_USERNAME";
+    echo "Not Found. Available endpoints:\n";
+    echo "  /api/stats?username=YOUR_GITHUB_USERNAME\n";
+    echo "  /api/top-langs?username=YOUR_GITHUB_USERNAME\n";
+    echo "\nOptional: &theme=dark";
 }

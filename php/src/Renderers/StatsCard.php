@@ -7,6 +7,7 @@ namespace App\Renderers;
 use App\Types\CardColors;
 use App\Types\RenderOptions;
 use App\Types\StatsData;
+use App\Types\Theme;
 use App\Utils\Formatter;
 
 class StatsCard
@@ -14,7 +15,16 @@ class StatsCard
     public static function render(StatsData $stats, ?RenderOptions $options = null): string
     {
         $options = $options ?? new RenderOptions();
-        $colors = $options->colors ?? new CardColors();
+        
+        // Resolve colors: explicit colors > theme > default
+        if ($options->colors !== null) {
+            $colors = $options->colors;
+        } elseif ($options->theme !== null) {
+            $colors = Theme::getColors($options->theme);
+        } else {
+            $colors = new CardColors();
+        }
+        
         $title = $options->customTitle ?? "{$stats->name}'s GitHub Stats";
 
         // Define available stats

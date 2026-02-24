@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\Api;
 
-use App\Fetchers\StatsFetcher;
-use App\Renderers\StatsCard;
-use App\Types\FetchStatsOptions;
+use App\Fetchers\LanguagesFetcher;
+use App\Renderers\LanguagesCard;
 use App\Types\RenderOptions;
 use Exception;
 
-class StatsController
+class LanguagesController
 {
-    private StatsFetcher $fetcher;
+    private LanguagesFetcher $fetcher;
 
-    public function __construct(?StatsFetcher $fetcher = null)
+    public function __construct(?LanguagesFetcher $fetcher = null)
     {
-        $this->fetcher = $fetcher ?? new StatsFetcher();
+        $this->fetcher = $fetcher ?? new LanguagesFetcher();
     }
 
     public function handle(array $params): string
@@ -28,27 +27,23 @@ class StatsController
                 throw new Exception('Username is required and must be a string');
             }
 
-            // Fetch stats
-            $stats = $this->fetcher->fetchStats(new FetchStatsOptions($username));
+            // Fetch languages
+            $languages = $this->fetcher->fetchLanguages($username);
 
-            // Parse hide options
-            $hide = [];
-            if (!empty($params['hide'])) {
-                $hide = array_map('trim', explode(',', $params['hide']));
-            }
+            // Parse options
+            $langsCount = isset($params['langs_count']) ? (int) $params['langs_count'] : 5;
+            $langsCount = max(1, min($langsCount, 10)); // Clamp between 1-10
 
             // Build render options
             $renderOptions = new RenderOptions(
-                hide: $hide,
                 hideTitle: ($params['hide_title'] ?? '') === 'true',
                 hideBorder: ($params['hide_border'] ?? '') === 'true',
-                hideRank: ($params['hide_rank'] ?? '') === 'true',
                 cardWidth: isset($params['card_width']) ? (int) $params['card_width'] : 450,
                 theme: $params['theme'] ?? null,
                 customTitle: $params['custom_title'] ?? null
             );
 
-            return StatsCard::render($stats, $renderOptions);
+            return LanguagesCard::render($languages, $username, $renderOptions, $langsCount);
         } catch (Exception $e) {
             return $this->renderError($e->getMessage());
         }

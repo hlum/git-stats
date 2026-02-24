@@ -22,16 +22,27 @@ composer test                        # Run all tests
 ./vendor/bin/phpunit --filter=StatsCard  # Run single test class
 ```
 
+## API Endpoints (PHP)
+
+```
+/api/stats?username=USER              # Stats card
+/api/stats?username=USER&theme=dark   # Stats card (dark mode)
+/api/top-langs?username=USER          # Top languages card
+/api/top-langs?username=USER&theme=dark&langs_count=6
+```
+
+**Common parameters:** `theme` (light/dark), `hide_title`, `hide_border`, `card_width`, `custom_title`
+
 ## Architecture
 
 Both implementations share the same structure:
 
 ```
 src/ (or php/src/)
-├── api/ (Api/)       # Express/PHP server with /api/stats endpoint
-├── fetchers/         # GitHub GraphQL API data fetching
-├── renderers/        # SVG card generation (card = base, stats-card = stats card)
-├── types/            # TypeScript interfaces / PHP classes
+├── api/ (Api/)       # Express/PHP server with /api/stats and /api/top-langs endpoints
+├── fetchers/         # GitHub GraphQL API data fetching (stats, languages)
+├── renderers/        # SVG card generation (card = base, stats-card, languages-card)
+├── types/            # TypeScript interfaces / PHP classes (includes Theme for dark mode)
 └── utils/            # Helpers (http, retryer, formatter, rank calculation)
 ```
 
@@ -42,4 +53,5 @@ src/ (or php/src/)
 - Tests mirror the `src/` folder structure (TypeScript: `src/tests/`, PHP: `php/tests/`)
 - GraphQL queries are embedded directly in fetcher files
 - Renderers build SVG strings using template literals / heredocs
+- Theme system in `Types/Theme.php` provides light/dark color presets
 - Environment config via `dotenv` with `.env` file (requires `GITHUB_TOKEN`)
