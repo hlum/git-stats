@@ -36,3 +36,5 @@ coverage/
 php/vendor/
 php/.phpunit.result.cache
 composer.phar
+
+.github/

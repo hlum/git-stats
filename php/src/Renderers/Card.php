@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Renderers;
 
 use App\Types\CardColors;
+use App\Types\RenderOptions;
 
 class Card
 {
@@ -14,21 +15,32 @@ class Card
         CardColors $colors,
         string $content,
         string $title = '',
-        bool $hideTitle = false,
-        bool $hideBorder = false
+        ?RenderOptions $options = null
     ): string {
-        $borderStyle = $hideBorder
+        $options = $options ?? new RenderOptions();
+        
+        $borderStyle = $options->hideBorder
             ? ''
             : sprintf('stroke="%s" stroke-width="1"', $colors->borderColor);
 
         $titleElement = '';
-        if (!$hideTitle && $title !== '') {
+        if (!$options->hideTitle && $title !== '') {
             $titleElement = sprintf(
-                '<text x="25" y="35" class="header" fill="%s">%s</text>',
+                '<text x="%d" y="%d" class="header" fill="%s">%s</text>',
+                $options->paddingX,
+                $options->titleOffsetY,
                 $colors->titleColor,
                 htmlspecialchars($title)
             );
         }
+
+        $borderRadius = $options->borderRadius;
+        $titleFontSize = $options->titleFontSize;
+        $textFontSize = $options->textFontSize;
+        
+        // Pre-calculate dimensions (PHP heredoc can't evaluate expressions)
+        $rectWidth = $width - 1;
+        $rectHeight = $height - 1;
 
         return <<<SVG
 <svg width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}" 
@@ -36,16 +48,16 @@ class Card
   <title>{$title}</title>
   <rect 
     x="0.5" y="0.5" 
-    width="{($width - 1)}" height="{($height - 1)}" 
-    rx="4.5" 
+    width="{$rectWidth}" height="{$rectHeight}" 
+    rx="{$borderRadius}" 
     fill="{$colors->bgColor}" 
     {$borderStyle}
   />
   {$titleElement}
   {$content}
   <style>
-    .header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; }
-    .stat { font: 600 14px 'Segoe UI', Ubuntu, Sans-Serif; fill: {$colors->textColor}; }
+    .header { font: 600 {$titleFontSize}px 'Segoe UI', Ubuntu, Sans-Serif; }
+    .stat { font: 600 {$textFontSize}px 'Segoe UI', Ubuntu, Sans-Serif; fill: {$colors->textColor}; }
     .bold { font-weight: 700; }
   </style>
 </svg>

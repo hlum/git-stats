@@ -7,6 +7,7 @@ namespace App\Api;
 use App\Fetchers\LanguagesFetcher;
 use App\Renderers\LanguagesCard;
 use App\Types\RenderOptions;
+use App\Utils\ColorParser;
 use Exception;
 
 class LanguagesController
@@ -34,13 +35,34 @@ class LanguagesController
             $langsCount = isset($params['langs_count']) ? (int) $params['langs_count'] : 5;
             $langsCount = max(1, min($langsCount, 10)); // Clamp between 1-10
 
-            // Build render options
+            // Parse colors (theme + custom overrides)
+            $colors = ColorParser::fromParams($params);
+
+            // Build render options with all customization params
             $renderOptions = new RenderOptions(
+                // Visibility
                 hideTitle: ($params['hide_title'] ?? '') === 'true',
                 hideBorder: ($params['hide_border'] ?? '') === 'true',
+                disableAnimations: ($params['disable_animations'] ?? '') === 'true',
+                
+                // Dimensions
                 cardWidth: isset($params['card_width']) ? (int) $params['card_width'] : 450,
-                theme: $params['theme'] ?? null,
-                customTitle: $params['custom_title'] ?? null
+                cardHeight: isset($params['card_height']) ? (int) $params['card_height'] : null,
+                borderRadius: isset($params['border_radius']) ? (int) $params['border_radius'] : 5,
+                lineHeight: isset($params['line_height']) ? (int) $params['line_height'] : 25,
+                
+                // Offsets/Padding
+                paddingX: isset($params['padding_x']) ? (int) $params['padding_x'] : 25,
+                paddingY: isset($params['padding_y']) ? (int) $params['padding_y'] : 20,
+                titleOffsetY: isset($params['title_offset_y']) ? (int) $params['title_offset_y'] : 35,
+                
+                // Font sizes
+                titleFontSize: isset($params['title_font_size']) ? (int) $params['title_font_size'] : 18,
+                textFontSize: isset($params['text_font_size']) ? (int) $params['text_font_size'] : 14,
+                
+                // Content
+                customTitle: $params['custom_title'] ?? null,
+                colors: $colors
             );
 
             return LanguagesCard::render($languages, $username, $renderOptions, $langsCount);

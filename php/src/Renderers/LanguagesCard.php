@@ -6,7 +6,6 @@ namespace App\Renderers;
 
 use App\Types\CardColors;
 use App\Types\RenderOptions;
-use App\Types\Theme;
 
 class LanguagesCard
 {
@@ -20,16 +19,7 @@ class LanguagesCard
         int $langsCount = 5
     ): string {
         $options = $options ?? new RenderOptions();
-        
-        // Resolve colors: explicit colors > theme > default
-        if ($options->colors !== null) {
-            $colors = $options->colors;
-        } elseif ($options->theme !== null) {
-            $colors = Theme::getColors($options->theme);
-        } else {
-            $colors = new CardColors();
-        }
-        
+        $colors = $options->colors ?? new CardColors();
         $title = $options->customTitle ?? "Most Used Languages";
 
         // Limit to top N languages
@@ -43,18 +33,26 @@ class LanguagesCard
             }
         }
 
-        // Calculate dimensions
+        // Calculate dimensions using options
+        $paddingX = $options->paddingX;
+        $paddingY = $options->paddingY;
+        $lineHeight = $options->lineHeight;
         $barHeight = 8;
-        $langItemHeight = 25;
-        $yOffset = $options->hideTitle ? 30 : 55;
-        $height = $yOffset + (count($topLanguages) * $langItemHeight) + 20;
-        $barWidth = $options->cardWidth - 50;
+        
+        // Calculate rows needed (2 columns layout)
+        $rowCount = (int) ceil(count($topLanguages) / 2);
+        $yOffset = $options->hideTitle ? ($paddingY + 10) : ($options->titleOffsetY + 25);
+        $itemsStartY = $yOffset + $barHeight + 15;
+        $height = $options->cardHeight ?? ($itemsStartY + ($rowCount * $lineHeight) + $paddingY);
+        $barWidth = $options->cardWidth - ($paddingX * 2);
 
-        // Build progress bar
-        $progressBar = self::createProgressBar($topLanguages, 25, $yOffset - 20, $barWidth, $barHeight);
+        // Build progress bar (positioned with padding from title)
+        $barY = $yOffset;
+        $progressBar = self::createProgressBar($topLanguages, $paddingX, $barY, $barWidth, $barHeight);
 
-        // Build language items
-        $langItems = self::createLanguageItems($topLanguages, $yOffset, $colors);
+        // Build language items (with gap after progress bar)
+        $itemsStartY = $barY + $barHeight + 15;
+        $langItems = self::createLanguageItems($topLanguages, $itemsStartY, $colors, $paddingX, $lineHeight);
 
         $content = $progressBar . $langItems;
 
@@ -64,8 +62,7 @@ class LanguagesCard
             $colors,
             $content,
             $title,
-            $options->hideTitle,
-            $options->hideBorder
+            $options
         );
     }
 
@@ -119,7 +116,9 @@ SVG;
     private static function createLanguageItems(
         array $languages,
         int $startY,
-        CardColors $colors
+        CardColors $colors,
+        int $paddingX,
+        int $lineHeight
     ): string {
         $items = '';
         $index = 0;
@@ -128,8 +127,8 @@ SVG;
         foreach ($languages as $name => $data) {
             $col = $index % 2;
             $row = intdiv($index, 2);
-            $x = 25 + ($col * $colWidth);
-            $y = $startY + ($row * 25);
+            $x = $paddingX + ($col * $colWidth);
+            $y = $startY + ($row * $lineHeight);
 
             $color = htmlspecialchars($data['color']);
             $safeName = htmlspecialchars($name);

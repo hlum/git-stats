@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Renderers;
 
 use App\Renderers\LanguagesCard;
+use App\Types\CardColors;
 use App\Types\RenderOptions;
+use App\Types\Theme;
 use PHPUnit\Framework\TestCase;
 
 class LanguagesCardTest extends TestCase
@@ -44,7 +46,8 @@ class LanguagesCardTest extends TestCase
 
     public function testAppliesDarkTheme(): void
     {
-        $options = new RenderOptions(theme: 'dark');
+        $colors = Theme::getColors('dark');
+        $options = new RenderOptions(colors: $colors);
         $svg = LanguagesCard::render($this->mockLanguages, 'testuser', $options);
 
         // Dark theme uses #0d1117 as background
@@ -53,11 +56,22 @@ class LanguagesCardTest extends TestCase
 
     public function testAppliesLightTheme(): void
     {
-        $options = new RenderOptions(theme: 'light');
+        $colors = Theme::getColors('light');
+        $options = new RenderOptions(colors: $colors);
         $svg = LanguagesCard::render($this->mockLanguages, 'testuser', $options);
 
         // Light theme uses #fffefe as background
         $this->assertStringContainsString('#fffefe', $svg);
+    }
+
+    public function testAppliesCustomColors(): void
+    {
+        $colors = new CardColors(bgColor: '#ff0000', textColor: '#00ff00');
+        $options = new RenderOptions(colors: $colors);
+        $svg = LanguagesCard::render($this->mockLanguages, 'testuser', $options);
+
+        $this->assertStringContainsString('#ff0000', $svg);
+        $this->assertStringContainsString('#00ff00', $svg);
     }
 
     public function testHidesTitleWhenRequested(): void

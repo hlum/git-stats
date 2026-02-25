@@ -7,7 +7,6 @@ namespace App\Renderers;
 use App\Types\CardColors;
 use App\Types\RenderOptions;
 use App\Types\StatsData;
-use App\Types\Theme;
 use App\Utils\Formatter;
 
 class StatsCard
@@ -15,16 +14,7 @@ class StatsCard
     public static function render(StatsData $stats, ?RenderOptions $options = null): string
     {
         $options = $options ?? new RenderOptions();
-        
-        // Resolve colors: explicit colors > theme > default
-        if ($options->colors !== null) {
-            $colors = $options->colors;
-        } elseif ($options->theme !== null) {
-            $colors = Theme::getColors($options->theme);
-        } else {
-            $colors = new CardColors();
-        }
-        
+        $colors = $options->colors ?? new CardColors();
         $title = $options->customTitle ?? "{$stats->name}'s GitHub Stats";
 
         // Define available stats
@@ -64,15 +54,18 @@ class StatsCard
             }
         }
 
-        // Calculate card dimensions
-        $statHeight = count($allStats) * 25;
-        $yOffset = $options->hideTitle ? 20 : 50;
-        $height = $yOffset + $statHeight + 20;
+        // Calculate card dimensions using options
+        $lineHeight = $options->lineHeight;
+        $paddingX = $options->paddingX;
+        $paddingY = $options->paddingY;
+        $statHeight = count($visibleStats) * $lineHeight;
+        $yOffset = $options->hideTitle ? $paddingY : ($options->titleOffsetY + 15);
+        $height = $options->cardHeight ?? ($yOffset + $statHeight + $paddingY);
 
         // Render stat items
         $statsContent = '';
         foreach ($visibleStats as $index => $stat) {
-            $statsContent .= self::createStatItem($stat, $index, $yOffset);
+            $statsContent .= self::createStatItem($stat, $index, $yOffset, $paddingX, $lineHeight);
         }
 
         // Render rank circle
@@ -95,18 +88,22 @@ class StatsCard
             $colors,
             $content,
             $title,
-            $options->hideTitle,
-            $options->hideBorder
+            $options
         );
     }
 
-    private static function createStatItem(array $item, int $index, int $yOffset): string
-    {
-        $y = $yOffset + $index * 25;
+    private static function createStatItem(
+        array $item,
+        int $index,
+        int $yOffset,
+        int $paddingX,
+        int $lineHeight
+    ): string {
+        $y = $yOffset + $index * $lineHeight;
 
         return <<<SVG
     <g transform="translate(0, {$y})">
-      <text class="stat" x="25" y="12.5">{$item['label']}:</text>
+      <text class="stat" x="{$paddingX}" y="12.5">{$item['label']}:</text>
       <text class="stat bold" x="220" y="12.5" data-testid="{$item['id']}">
         {$item['value']}
       </text>
