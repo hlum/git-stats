@@ -31,4 +31,10 @@ coverage/
 
 # TypeScript
 *.js.map
-instructions.md
+
+# PHP
+php/vendor/
+php/.phpunit.result.cache
+composer.phar
+
+.github/
